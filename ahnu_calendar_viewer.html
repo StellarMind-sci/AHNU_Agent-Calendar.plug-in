@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>安徽师范大学 · 校园日历</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+--navy:#0c447c;--navy-d:#042c53;--navy-l:#185fa5;
+--sky:#e6f1fb;--sky2:#b5d4f4;--sky3:#85b7eb;
+--surface:#fff;--bg:#f0f4f9;--bg2:#f8fafd;
+--text:#0a1929;--text2:#4a6280;--text3:#8da0b8;
+--border:#d0dae8;--border2:#e2eaf4;
+--red:#a32d2d;--red-bg:#fcebeb;--red-l:#f09595;
+--green:#3b6d11;--green-bg:#eaf3de;
+--purple:#534ab7;--purple-bg:#eeedfe;
+--teal:#0f6e56;--teal-bg:#e1f5ee;
+--amber:#854f0b;--amber-bg:#faeeda;
+--coral:#993c1d;--coral-bg:#faece7;
+--warn:#d97706;--warn-bg:#fffbeb;
+--gray:#5f5e5a;--gray-bg:#f1efe8;
+--r:8px;--rl:12px;--mono:'JetBrains Mono',monospace;--sans:'Noto Sans SC',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh}
+button{font-family:var(--sans);cursor:pointer}
+
+.topbar{position:sticky;top:0;z-index:100;background:var(--navy);height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;box-shadow:0 2px 12px rgba(4,44,83,.15)}
+.logo-area{display:flex;align-items:center;gap:12px}
+.logo-crest{width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center}
+.logo-crest svg{width:22px;height:22px}
+.logo-text{display:flex;flex-direction:column}
+.logo-cn{color:#fff;font-size:14px;font-weight:700;letter-spacing:.04em;line-height:1.2}
+.logo-en{color:var(--sky3);font-size:10px;letter-spacing:.06em;font-family:var(--mono)}
+.tb-right{display:flex;gap:6px;align-items:center}
+.tb-btn{background:rgba(255,255,255,.12);color:#fff;border:0.5px solid rgba(255,255,255,.25);border-radius:6px;padding:5px 13px;font-size:12px;transition:all .15s;white-space:nowrap}
+.tb-btn:hover{background:rgba(255,255,255,.22)}
+.tb-btn.on{background:#fff;color:var(--navy);font-weight:500;border-color:#fff}
+
+.import-bar{background:var(--surface);border-bottom:1px solid var(--border2);padding:10px 20px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.import-bar.hidden{display:none}
+.ib-label{font-size:12px;color:var(--text3);white-space:nowrap}
+.ib-input{flex:1;min-width:200px;height:32px;border:0.5px solid var(--sky2);border-radius:6px;background:var(--sky);padding:0 10px;font-size:11px;color:var(--text2);font-family:var(--mono);outline:none;transition:border-color .15s}
+.ib-input:focus{border-color:var(--navy-l)}
+.ib-btn{height:32px;padding:0 14px;border-radius:6px;font-size:12px;border:none;font-weight:500;transition:all .15s}
+.ib-render{background:var(--navy);color:#fff}
+.ib-render:hover{background:var(--navy-l)}
+.ib-demo{background:var(--sky);color:var(--navy);border:0.5px solid var(--sky2)}
+.ib-demo:hover{background:var(--sky2)}
+.ib-clear{background:var(--red-bg);color:var(--red);border:0.5px solid var(--red-l)}
+.status-line{font-size:11px;color:var(--text3);font-family:var(--mono);padding:0 20px 8px;background:var(--surface);border-bottom:1px solid var(--border2);display:none}
+.status-line.show{display:block}
+.status-line.ok{color:var(--green)}
+.status-line.err{color:var(--red)}
+
+.main{max-width:1180px;margin:0 auto;padding:20px}
+.cal-area{display:none}
+.cal-area.show{display:block}
+
+.cal-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:14px}
+.ch-left .ch-title{font-size:20px;font-weight:700;color:var(--navy-d);line-height:1.3}
+.ch-left .ch-range{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px}
+.ch-right{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{font-size:11px;padding:4px 10px;border-radius:20px;white-space:nowrap;border:0.5px solid}
+.pill-blue{background:var(--sky);color:var(--navy);border-color:var(--sky2)}
+.pill-red{background:var(--red-bg);color:var(--red);border-color:var(--red-l)}
+.pill-gray{background:var(--bg2);color:var(--text2);border-color:var(--border2)}
+
+.urgent-banner{background:var(--warn-bg);border:0.5px solid #fde68a;border-radius:var(--r);padding:9px 14px;margin-bottom:12px;font-size:12px;color:var(--warn);display:none;align-items:center;gap:8px;line-height:1.5}
+.urgent-banner.show{display:flex}
+
+.toolbar{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:center}
+.filter-bar{display:flex;gap:4px;flex-wrap:wrap}
+.filter-btn{padding:4px 12px;border-radius:20px;font-size:11px;border:0.5px solid var(--border);background:var(--surface);color:var(--text2);transition:all .12s}
+.filter-btn:hover,.filter-btn.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.search-box{width:180px;height:30px;border:0.5px solid var(--border);border-radius:6px;padding:0 10px;font-size:12px;background:var(--surface);outline:none;transition:border-color .15s}
+.search-box:focus{border-color:var(--navy-l)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:14px}
+.layout.no-side{grid-template-columns:1fr}
+
+.week-grid{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.wk-hdr{display:grid;grid-template-columns:48px repeat(7,minmax(0,1fr));border-bottom:1px solid var(--border2)}
+.wk-hdr-time{background:var(--sky);border-right:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center}
+.wk-hdr-day{padding:10px 4px;text-align:center;border-right:0.5px solid var(--border2);position:relative;transition:background .12s}
+.wk-hdr-day:last-child{border-right:none}
+.wk-hdr-day.today{background:var(--sky)}
+.wk-hdr-day.wknd{background:var(--bg2)}
+.wdn{font-size:10px;color:var(--text3);letter-spacing:.05em}
+.wdd{font-size:16px;font-weight:700;color:var(--text);font-family:var(--mono);line-height:1.2}
+.wdd.today-n{color:var(--navy)}
+.wd-badge{position:absolute;top:5px;right:5px;background:var(--navy);color:#fff;font-size:9px;padding:0 5px;border-radius:8px;font-family:var(--mono);line-height:16px}
+.allday-row{display:grid;grid-template-columns:48px repeat(7,minmax(0,1fr));border-bottom:0.5px solid var(--border2);background:#fffef8;min-height:28px}
+.ad-lbl{font-size:9px;color:var(--text3);display:flex;align-items:center;justify-content:center;border-right:0.5px solid var(--border2);background:var(--sky)}
+.ad-cell{padding:2px;border-right:0.5px solid var(--border2)}
+.ad-cell:last-child{border-right:none}
+.ad-evt{font-size:10px;padding:2px 6px;border-radius:3px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;margin-bottom:1px}
+.wk-body{display:grid;grid-template-columns:48px repeat(7,minmax(0,1fr))}
+.t-col{background:var(--sky);border-right:0.5px solid var(--border2)}
+.t-slot{height:60px;display:flex;align-items:flex-start;justify-content:flex-end;padding:5px 6px 0 0;font-size:9px;color:var(--text3);font-family:var(--mono);border-bottom:0.5px solid var(--border2)}
+.d-col{border-right:0.5px solid var(--border2)}
+.d-col:last-child{border-right:none}
+.d-col.today-c{background:rgba(12,68,124,.015)}
+.d-slot{height:60px;padding:2px;border-bottom:0.5px solid var(--border2);position:relative}
+.eb{border-radius:4px;padding:3px 5px;margin-bottom:2px;border-left:3px solid;cursor:pointer;transition:transform .1s,box-shadow .1s;overflow:hidden}
+.eb:hover{transform:scale(1.03);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.eb-title{font-size:10px;font-weight:500;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.eb-meta{font-size:9px;color:var(--text3);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.month-grid{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);overflow:hidden;display:none}
+.month-grid.show{display:block}
+.mg-wdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:1.5px solid var(--border)}
+.mg-wd{text-align:center;padding:10px;font-size:11px;font-weight:500;color:var(--text3);letter-spacing:.04em}
+.mg-wd.wknd{color:var(--red)}
+.mg-rows{display:flex;flex-direction:column}
+.mg-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-bottom:0.5px solid var(--border2)}
+.mg-row:last-child{border-bottom:none}
+.mg-cell{border-right:0.5px solid var(--border2);padding:5px;min-height:88px;transition:background .1s;cursor:default}
+.mg-cell:last-child{border-right:none}
+.mg-cell.empty{background:var(--bg)}
+.mg-cell.today{background:var(--sky)}
+.mg-cell.wknd{background:var(--bg2)}
+.mg-cell:hover:not(.empty){background:rgba(12,68,124,.03)}
+.mg-num{font-size:13px;font-weight:700;color:var(--text2);margin-bottom:3px;font-family:var(--mono)}
+.mg-num.today-n{color:var(--navy)}
+.mg-evt{border-radius:3px;padding:1px 4px;margin-bottom:2px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-left:2px solid}
+.mg-more{font-size:9px;color:var(--text3);padding:1px 4px}
+
+.sidebar{display:flex;flex-direction:column;gap:12px}
+.side-card{background:var(--surface);border:0.5px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.sc-hdr{background:var(--navy);padding:10px 14px;font-size:12px;font-weight:500;color:#fff;display:flex;align-items:center;gap:6px}
+.sc-body{padding:12px 14px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat-item{background:var(--sky);border-radius:var(--r);padding:10px;text-align:center}
+.stat-num{font-size:20px;font-weight:700;color:var(--navy);font-family:var(--mono)}
+.stat-lbl{font-size:10px;color:var(--text3);margin-top:2px}
+.exam-item{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border2)}
+.exam-item:last-child{border-bottom:none}
+.exam-days{width:44px;height:44px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0}
+.exam-days.urgent{background:var(--red-bg);color:var(--red)}
+.exam-days.normal{background:var(--sky);color:var(--navy)}
+.exam-d-num{font-size:16px;font-weight:700;line-height:1;font-family:var(--mono)}
+.exam-d-lbl{font-size:8px;letter-spacing:.02em}
+.exam-info{flex:1;min-width:0}
+.exam-name{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exam-date{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.exam-bar{height:4px;border-radius:2px;background:var(--border2);margin-top:4px;overflow:hidden}
+.exam-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(4,44,83,.4);z-index:200;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:14px;width:340px;max-width:90vw;overflow:hidden;box-shadow:0 16px 48px rgba(4,44,83,.2);animation:mdIn .15s ease}
+@keyframes mdIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.md-hdr{background:var(--navy);padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.md-title{color:#fff;font-size:15px;font-weight:700}
+.md-close{color:var(--sky3);font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px;transition:background .12s;background:none;border:none}
+.md-close:hover{background:rgba(255,255,255,.15)}
+.md-body{padding:16px 18px}
+.md-type{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:6px;margin-bottom:12px}
+.md-rows{display:flex;flex-direction:column;gap:8px}
+.md-row{display:flex;gap:10px;font-size:13px}
+.md-lbl{color:var(--text3);min-width:48px;flex-shrink:0}
+.md-val{color:var(--text)}
+.md-pri{font-size:11px;padding:2px 8px;border-radius:12px}
+
+.legend-bar{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding:10px 0}
+.lg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+.lg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.footer{margin-top:20px;text-align:center;padding:16px;font-size:11px;color:var(--text3)}
+.foot-brand{color:var(--navy);font-weight:500}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text3)}
+.empty-icon{font-size:48px;margin-bottom:12px;opacity:.5}
+.empty-msg{font-size:15px;margin-bottom:6px;color:var(--text2)}
+.empty-hint{font-size:12px;font-family:var(--mono)}
+
+@media print{
+.topbar,.import-bar,.status-line,.tb-right,.toolbar,.sidebar,.footer,.ib-btn,.filter-bar,.search-box{display:none!important}
+.layout{grid-template-columns:1fr!important}
+.main{padding:0}
+body{background:#fff}
+.week-grid,.month-grid{box-shadow:none;border:1px solid #ccc}
+}
+
+@media(max-width:768px){
+.layout{grid-template-columns:1fr!important}
+.sidebar{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.topbar{height:46px;padding:0 12px}
+.main{padding:12px}
+.wk-hdr-time,.t-col,.ad-lbl{display:none}
+.wk-hdr{grid-template-columns:repeat(7,minmax(0,1fr))}
+.wk-body{grid-template-columns:repeat(7,minmax(0,1fr))}
+.allday-row{grid-template-columns:repeat(7,minmax(0,1fr))}
+.logo-en{display:none}
+.cal-head{flex-direction:column;align-items:flex-start}
+.ch-right{width:100%;overflow-x:auto}
+}
+@media(max-width:480px){
+.sidebar{grid-template-columns:1fr}
+.wdd{font-size:13px}
+.wdn{font-size:9px}
+.eb-title{font-size:9px}
+.tb-btn{padding:4px 8px;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar">
+  <div class="logo-area">
+    <div class="logo-crest">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" stroke="#0c447c" stroke-width="1.5" fill="#fff"/>
+        <circle cx="20" cy="20" r="16" stroke="#0c447c" stroke-width="0.5" fill="none"/>
+        <path d="M20 8 L20 13 M20 13 C16 13 13 16 13 20 C13 24 16 28 20 32 C24 28 27 24 27 20 C27 16 24 13 20 13Z" fill="#0c447c"/>
+        <circle cx="20" cy="11" r="2.5" fill="#0c447c"/>
+        <text x="20" y="38" text-anchor="middle" font-size="3.5" fill="#0c447c" font-weight="700" font-family="serif">1928</text>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <div class="logo-cn">安徽师范大学 · 校园日历</div>
+      <div class="logo-en">ANHUI NORMAL UNIVERSITY</div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <button class="tb-btn on" id="btn-week" onclick="switchView('week')">周视图</button>
+    <button class="tb-btn" id="btn-month" onclick="switchView('month')">月视图</button>
+    <button class="tb-btn" onclick="exportImage()">📷 导出</button>
+    <button class="tb-btn" onclick="window.print()">🖨 打印</button>
+    <button class="tb-btn" onclick="toggleImport()">📥 导入</button>
+  </div>
+</div>
+
+<div class="import-bar" id="import-bar">
+  <span class="ib-label">粘贴 calendar_json：</span>
+  <input class="ib-input" id="json-input" placeholder='{"meta":{"title":"安师大·我的校园日程",...},"days":[...]}'>
+  <button class="ib-btn ib-render" onclick="loadCalendar()">▶ 渲染</button>
+  <button class="ib-btn ib-demo" onclick="loadDemo()">示例数据</button>
+  <button class="ib-btn ib-clear" onclick="clearAll()">清空</button>
+</div>
+<div class="status-line" id="status"></div>
+
+<div class="main">
+  <div id="empty-state" class="empty-state">
+    <div class="empty-icon">📅</div>
+    <div class="empty-msg">校园日历查看器</div>
+    <div class="empty-hint">粘贴 calendar_json 数据，或点击「示例数据」预览效果</div>
+  </div>
+
+  <div class="cal-area" id="cal-area">
+    <div class="cal-head">
+      <div class="ch-left"><div class="ch-title" id="cal-title"></div><div class="ch-range" id="cal-range"></div></div>
+      <div class="ch-right" id="cal-stats"></div>
+    </div>
+    <div class="urgent-banner" id="urgent-banner"></div>
+    <div class="toolbar">
+      <div class="filter-bar" id="filter-bar"></div>
+      <input class="search-box" id="search-box" placeholder="🔍 搜索事项..." oninput="applyFilters()">
+    </div>
+    <div class="layout" id="layout">
+      <div id="cal-render"></div>
+      <div class="sidebar" id="sidebar"></div>
+    </div>
+    <div class="legend-bar" id="legend"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <span class="foot-brand">安徽师范大学 · 校园生活服务助手</span> · 智能日程管理 · 让每一天都井井有条
+</div>
+
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal"><div class="md-hdr"><div class="md-title" id="md-title"></div><button class="md-close" onclick="closeModal()">×</button></div><div class="md-body" id="md-body"></div></div>
+</div>
+
+<script>
+let D=null,view='week',activeFilter='all',allEvents=[];
+
+const TYPE_COLORS={
+  '课程':{c:'#185fa5',bg:'#e6f1fb',dark:'#0c447c'},
+  '考试':{c:'#a32d2d',bg:'#fcebeb',dark:'#791f1f'},
+  '作业':{c:'#854f0b',bg:'#faeeda',dark:'#633806'},
+  '社团':{c:'#534ab7',bg:'#eeedfe',dark:'#3c3489'},
+  '活动':{c:'#3b6d11',bg:'#eaf3de',dark:'#27500a'},
+  '讲座':{c:'#0f6e56',bg:'#e1f5ee',dark:'#085041'},
+  '体育':{c:'#d97706',bg:'#fffbeb',dark:'#92400e'},
+  '其他':{c:'#5f5e5a',bg:'#f1efe8',dark:'#444441'}
+};
+
+function setStatus(type,text){
+  const el=document.getElementById('status');
+  el.className='status-line show '+type;
+  el.textContent=text;
+}
+
+function toggleImport(){
+  document.getElementById('import-bar').classList.toggle('hidden');
+}
+
+function switchView(v){
+  view=v;
+  document.getElementById('btn-week').classList.toggle('on',v==='week');
+  document.getElementById('btn-month').classList.toggle('on',v==='month');
+  renderBody();
+}
+
+function loadCalendar(){
+  const raw=document.getElementById('json-input').value.trim();
+  if(!raw){setStatus('err','请先粘贴 calendar_json 数据');return}
+  try{
+    D=JSON.parse(raw);
+    if(!D.meta||!D.days)throw new Error('缺少 meta 或 days 字段');
+    view=D.meta.view_mode||'week';
+    document.getElementById('btn-week').classList.toggle('on',view==='week');
+    document.getElementById('btn-month').classList.toggle('on',view==='month');
+    collectEvents();
+    render();
+    setStatus('ok','✓ 加载成功 · '+D.meta.total_events+' 项事务 · '+D.meta.generated_at);
+    document.getElementById('import-bar').classList.add('hidden');
+    document.getElementById('empty-state').style.display='none';
+    document.getElementById('cal-area').classList.add('show');
+  }catch(e){setStatus('err','✗ 解析失败: '+e.message)}
+}
+
+function clearAll(){
+  document.getElementById('json-input').value='';
+  document.getElementById('cal-area').classList.remove('show');
+  document.getElementById('empty-state').style.display='';
+  D=null;
+  setStatus('','已清空');
+}
+
+function collectEvents(){
+  allEvents=[];
+  if(!D||!D.days)return;
+  D.days.forEach(d=>(d.events||[]).forEach(e=>allEvents.push(e)));
+}
+
+function applyFilters(){
+  renderBody();
+}
+
+function getFilteredEvents(dayEvents){
+  const q=document.getElementById('search-box').value.trim().toLowerCase();
+  let list=dayEvents||[];
+  if(activeFilter!=='all') list=list.filter(e=>e.event_type===activeFilter);
+  if(q) list=list.filter(e=>(e.title+e.location+e.description).toLowerCase().includes(q));
+  return list;
+}
+
+function render(){
+  if(!D)return;
+  const m=D.meta;
+  document.getElementById('cal-title').textContent='📅 '+m.title;
+  document.getElementById('cal-range').textContent=m.range+' · 生成于 '+m.generated_at;
+
+  const tc=D.statistics?.by_type||{};
+  const cfg=D.event_type_config||TYPE_COLORS;
+  let statsH='<span class="pill pill-blue">共 '+m.total_events+' 项</span>';
+  if(m.urgent_count>0) statsH+='<span class="pill pill-red">⚠ 紧急 '+m.urgent_count+' 项</span>';
+  Object.entries(tc).forEach(([t,c])=>{
+    const icon=(cfg[t]?.icon||D.event_type_config?.[t]?.icon||'');
+    statsH+='<span class="pill pill-gray">'+icon+' '+t+' '+c+'</span>';
+  });
+  document.getElementById('cal-stats').innerHTML=statsH;
+
+  const urgents=D.statistics?.urgent_events||[];
+  const ub=document.getElementById('urgent-banner');
+  if(urgents.length){
+    ub.classList.add('show');
+    ub.innerHTML='⚠️ 紧急事项：'+urgents.map(e=>'<b>'+e.title+'</b> ('+e.date+')').join('、');
+  }else ub.classList.remove('show');
+
+  let filterH='<button class="filter-btn'+(activeFilter==='all'?' on':'')+'" onclick="setFilter(\'all\')">全部</button>';
+  Object.keys(tc).forEach(t=>{
+    const icon=cfg[t]?.icon||'';
+    filterH+='<button class="filter-btn'+(activeFilter===t?' on':'')+'" onclick="setFilter(\''+t+'\')">'+icon+' '+t+'</button>';
+  });
+  document.getElementById('filter-bar').innerHTML=filterH;
+
+  const leg=document.getElementById('legend');
+  const cfgAll=D.event_type_config||TYPE_COLORS;
+  leg.innerHTML=Object.entries(cfgAll).map(([t,v])=>'<div class="lg-item"><div class="lg-dot" style="background:'+(v.c||v.color)+'"></div>'+((v.icon||'')+' '+t)+'</div>').join('');
+
+  renderSidebar();
+  renderBody();
+}
+
+function setFilter(f){activeFilter=f;render();}
+
+function renderBody(){
+  if(!D)return;
+  const renderEl=document.getElementById('cal-render');
+  if(view==='week') renderEl.innerHTML=buildWeek();
+  else renderEl.innerHTML=buildMonth();
+}
+
+function buildWeek(){
+  const days=D.days||[];
+  const slots=D.time_slots||[['08:00','08:45'],['09:00','09:45'],['10:00','10:45'],['11:00','11:45'],['14:00','14:45'],['15:00','15:45'],['16:00','16:45'],['19:00','20:30'],['20:30','22:00']];
+  const cfg=D.event_type_config||TYPE_COLORS;
+
+  let hdrs='<div class="wk-hdr-time"></div>';
+  days.forEach(d=>{
+    const cls='wk-hdr-day'+(d.is_today?' today':'')+(d.is_weekend?' wknd':'');
+    const badge=d.event_count>0?'<span class="wd-badge">'+d.event_count+'</span>':'';
+    hdrs+='<div class="'+cls+'">'+badge+'<div class="wdn">'+d.weekday+'</div><div class="wdd'+(d.is_today?' today-n':'')+'">'+d.date.slice(8)+'</div></div>';
+  });
+
+  let adCells='<div class="ad-lbl">全天</div>';
+  days.forEach(d=>{
+    const filt=getFilteredEvents((d.events||[]).filter(e=>!e.start_time||e.start_time==='00:00'));
+    let c='';
+    filt.forEach(e=>{
+      const col=(cfg[e.event_type]?.c||cfg[e.event_type]?.color||'#888');
+      c+='<div class="ad-evt" style="background:'+col+'" onclick=\'showEvt('+JSON.stringify(JSON.stringify(e))+')\'>'+(e.icon||'')+' '+e.title+'</div>';
+    });
+    adCells+='<div class="ad-cell">'+c+'</div>';
+  });
+
+  let dayCols='';
+  days.forEach(d=>{
+    const tc=d.is_today?' today-c':'';
+    let cells='';
+    slots.forEach(([ss])=>{
+      const filt=getFilteredEvents((d.events||[]).filter(e=>e.start_time===ss));
+      let c='';
+      filt.forEach(e=>{
+        const col=cfg[e.event_type]||TYPE_COLORS[e.event_type]||{c:'#888',bg:'#f0f0f0'};
+        const color=col.c||col.color||'#888';
+        const bg=col.bg||'#f5f5f5';
+        const loc=e.location?'📍'+e.location.slice(0,8):'';
+        c+='<div class="eb" style="background:'+bg+';border-left-color:'+color+'" onclick=\'showEvt('+JSON.stringify(JSON.stringify(e))+')\'>'+
+          '<span class="eb-title" style="color:'+(col.dark||color)+'">'+(e.icon||'')+' '+e.title+'</span>'+
+          '<span class="eb-meta">'+ss+(e.end_time?'-'+e.end_time:'')+' '+loc+'</span></div>';
+      });
+      cells+='<div class="d-slot">'+c+'</div>';
+    });
+    dayCols+='<div class="d-col'+tc+'">'+cells+'</div>';
+  });
+
+  let tSlots='';
+  slots.forEach(([ss])=>tSlots+='<div class="t-slot">'+ss+'</div>');
+
+  return '<div class="week-grid" id="cal-grid"><div class="wk-hdr">'+hdrs+'</div><div class="allday-row">'+adCells+'</div><div class="wk-body"><div class="t-col">'+tSlots+'</div>'+dayCols+'</div></div>';
+}
+
+function buildMonth(){
+  const days=D.days||[];
+  const cfg=D.event_type_config||TYPE_COLORS;
+  if(!days.length)return'<div class="empty-state"><div class="empty-msg">无月视图数据</div></div>';
+
+  const wdays=['周一','周二','周三','周四','周五','周六','周日'];
+  const wdHdr=wdays.map((w,i)=>'<div class="mg-wd'+(i>=5?' wknd':'')+'">'+w+'</div>').join('');
+
+  const firstIdx=days[0]?.weekday_index??0;
+  const padStart=firstIdx===undefined?0:(firstIdx===0?6:firstIdx);
+  const cells=[];
+  for(let i=0;i<padStart;i++)cells.push(null);
+  days.forEach(d=>cells.push(d));
+  while(cells.length%7)cells.push(null);
+
+  let rows='';
+  for(let r=0;r<cells.length;r+=7){
+    let row='';
+    for(let c=0;c<7;c++){
+      const d=cells[r+c];
+      if(!d){row+='<div class="mg-cell empty"></div>';continue}
+      const cls='mg-cell'+(d.is_today?' today':'')+(d.is_weekend?' wknd':'');
+      const filt=getFilteredEvents(d.events||[]);
+      let evts='';
+      filt.slice(0,3).forEach(e=>{
+        const col=cfg[e.event_type]||TYPE_COLORS[e.event_type]||{c:'#888',bg:'#f5f5f5'};
+        const color=col.c||col.color||'#888';
+        const bg=col.bg||'#f5f5f5';
+        evts+='<div class="mg-evt" style="background:'+bg+';border-left-color:'+color+';color:'+(col.dark||color)+'" onclick=\'showEvt('+JSON.stringify(JSON.stringify(e))+')\'>'+
+          (e.icon||'')+' '+e.title.slice(0,8)+'</div>';
+      });
+      if(filt.length>3)evts+='<div class="mg-more">+'+(filt.length-3)+' 更多</div>';
+      row+='<div class="'+cls+'"><div class="mg-num'+(d.is_today?' today-n':'')+'">'+(d.day_num||parseInt(d.date.slice(8)))+'</div>'+evts+'</div>';
+    }
+    rows+='<div class="mg-row">'+row+'</div>';
+  }
+  return '<div class="month-grid show" id="cal-grid"><div class="mg-wdays">'+wdHdr+'</div><div class="mg-rows">'+rows+'</div></div>';
+}
+
+function renderSidebar(){
+  if(!D)return;
+  const sb=document.getElementById('sidebar');
+  const tc=D.statistics?.by_type||{};
+  const total=D.meta.total_events||0;
+  const urgent=D.meta.urgent_count||0;
+
+  let statH='<div class="side-card"><div class="sc-hdr">📊 本周统计</div><div class="sc-body"><div class="stat-grid">'+
+    '<div class="stat-item"><div class="stat-num">'+total+'</div><div class="stat-lbl">总事项</div></div>'+
+    '<div class="stat-item"><div class="stat-num">'+urgent+'</div><div class="stat-lbl">紧急</div></div>'+
+    '<div class="stat-item"><div class="stat-num">'+(tc['课程']||0)+'</div><div class="stat-lbl">课程</div></div>'+
+    '<div class="stat-item"><div class="stat-num">'+(tc['活动']||0)+'</div><div class="stat-lbl">活动</div></div>'+
+    '</div></div></div>';
+
+  const exams=allEvents.filter(e=>e.event_type==='考试'&&(e.days_until>=0||e.days_until===undefined)).sort((a,b)=>(a.days_until||999)-(b.days_until||999));
+
+  let examH='';
+  if(exams.length){
+    examH='<div class="side-card"><div class="sc-hdr">⏳ 考试倒计时</div><div class="sc-body">';
+    exams.slice(0,4).forEach(e=>{
+      const du=e.days_until!=null?e.days_until:99;
+      const urg=du<=7;
+      const pct=Math.min(100,Math.round((30-du)/30*100));
+      const barColor=du<=3?'#a32d2d':du<=7?'#d97706':du<=14?'#854f0b':'#185fa5';
+      examH+='<div class="exam-item"><div class="exam-days '+(urg?'urgent':'normal')+'"><div class="exam-d-num">'+du+'</div><div class="exam-d-lbl">天</div></div>'+
+        '<div class="exam-info"><div class="exam-name">'+e.title+'</div><div class="exam-date">'+e.date+(e.location?' · 📍'+e.location:'')+'</div>'+
+        '<div class="exam-bar"><div class="exam-bar-fill" style="width:'+pct+'%;background:'+barColor+'"></div></div></div></div>';
+    });
+    examH+='</div></div>';
+  }
+
+  const busyDays=(D.days||[]).map(d=>({w:d.weekday,c:d.event_count}));
+  let heatH='<div class="side-card"><div class="sc-hdr">📈 忙碌热力</div><div class="sc-body">';
+  const maxC=Math.max(...busyDays.map(d=>d.c),1);
+  busyDays.forEach(d=>{
+    const pct=Math.round(d.c/maxC*100);
+    heatH+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font-size:11px;width:28px;color:#4a6280">'+d.w.slice(1)+'</span>'+
+      '<div style="flex:1;height:14px;background:#e2eaf4;border-radius:3px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#85b7eb,#0c447c);border-radius:3px;transition:width .3s"></div></div>'+
+      '<span style="font-size:10px;width:16px;text-align:right;color:#8da0b8;font-family:var(--mono)">'+d.c+'</span></div>';
+  });
+  heatH+='</div></div>';
+
+  sb.innerHTML=statH+examH+heatH;
+}
+
+function showEvt(jsonStr){
+  const e=JSON.parse(jsonStr);
+  const cfg=D?.event_type_config||TYPE_COLORS;
+  const col=cfg[e.event_type]||TYPE_COLORS[e.event_type]||{c:'#888',bg:'#f0f0f0'};
+  const color=col.c||col.color||'#888';
+  const bg=col.bg||'#f5f5f5';
+  const dark=col.dark||color;
+  document.getElementById('md-title').textContent=e.title;
+  const timeStr=e.start_time&&e.start_time!=='00:00'?e.date+' '+e.start_time+(e.end_time?'–'+e.end_time:''):e.date+' 全天';
+  const priColors={'🔴 紧急':{bg:'#fcebeb',c:'#a32d2d'},'🟡 重要':{bg:'#faeeda',c:'#854f0b'},'🟢 一般':{bg:'#eaf3de',c:'#3b6d11'},'⚪ 低':{bg:'#f1efe8',c:'#5f5e5a'}};
+  const pri=priColors[e.priority_label]||{bg:'#f1efe8',c:'#5f5e5a'};
+  const rows=[
+    ['类型','<span class="md-type" style="background:'+bg+';color:'+dark+'">'+(e.icon||'')+' '+e.event_type+'</span>'],
+    ['时间',timeStr],
+    e.location?['地点','📍 '+e.location]:null,
+    ['优先级','<span class="md-pri" style="background:'+pri.bg+';color:'+pri.c+'">'+(e.priority_label||'—')+'</span>'],
+    e.description?['备注',e.description]:null,
+    e.created_at?['添加于',e.created_at]:null,
+  ].filter(Boolean);
+  document.getElementById('md-body').innerHTML='<div class="md-rows">'+rows.map(([l,v])=>'<div class="md-row"><span class="md-lbl">'+l+'</span><span class="md-val">'+v+'</span></div>').join('')+'</div>';
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(ev){
+  if(!ev||ev.target===document.getElementById('modal'))
+    document.getElementById('modal').classList.remove('open');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal(e)});
+
+function exportImage(){
+  const el=document.getElementById('cal-grid');
+  if(!el){alert('请先渲染日历');return}
+  html2canvas(el,{scale:2,backgroundColor:'#ffffff',useCORS:true}).then(canvas=>{
+    const link=document.createElement('a');
+    link.download='安师大校园日历_'+(D?.meta?.range||'').replace(/\s/g,'_')+'.png';
+    link.href=canvas.toDataURL();
+    link.click();
+  }).catch(err=>alert('导出失败: '+err.message));
+}
+
+function loadDemo(){
+  const now=new Date();
+  const mon=new Date(now);
+  mon.setDate(now.getDate()-now.getDay()+(now.getDay()===0?-6:1));
+  const wds=['周一','周二','周三','周四','周五','周六','周日'];
+  const fmt=d=>d.toISOString().slice(0,10);
+  const sample=[
+    [{title:'高等数学',event_type:'课程',icon:'📚',start_time:'09:00',end_time:'10:45',location:'二教302',priority:5,priority_label:'🟡 重要'}],
+    [{title:'软件工程作业截止',event_type:'作业',icon:'✏️',start_time:'00:00',end_time:'',location:'',priority:7,priority_label:'🟡 重要'}],
+    [{title:'数据结构',event_type:'课程',icon:'📚',start_time:'10:00',end_time:'11:45',location:'一教205',priority:5,priority_label:'🟡 重要'},
+     {title:'算法竞赛讲座',event_type:'讲座',icon:'🎤',start_time:'14:00',end_time:'16:00',location:'理科楼报告厅',priority:4,priority_label:'🟢 一般'}],
+    [{title:'英语四级',event_type:'考试',icon:'📝',start_time:'09:00',end_time:'11:20',location:'考试楼A201',priority:10,priority_label:'🔴 紧急',days_until:5}],
+    [{title:'羽毛球社团活动',event_type:'社团',icon:'🎭',start_time:'16:00',end_time:'18:00',location:'体育馆',priority:3,priority_label:'🟢 一般'},
+     {title:'高数期末考试',event_type:'考试',icon:'📝',start_time:'09:00',end_time:'11:00',location:'一教101',priority:10,priority_label:'🔴 紧急',days_until:18}],
+    [{title:'五四青年节晚会',event_type:'活动',icon:'🎉',start_time:'19:00',end_time:'21:30',location:'大学生活动中心',priority:3,priority_label:'🟢 一般'}],
+    [],
+  ];
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(mon);d.setDate(mon.getDate()+i);
+    const ds=fmt(d);
+    const evts=(sample[i]||[]).map((e,j)=>({...e,id:'d_'+i+'_'+j,date:ds,color:TYPE_COLORS[e.event_type]?.c||'#888',description:'',week_repeat:false,created_at:fmt(now)+' 12:00'}));
+    days.push({date:ds,weekday:wds[i],is_today:ds===fmt(now),is_weekend:i>=5,event_count:evts.length,events:evts,day_num:d.getDate(),weekday_index:i});
+  }
+  const allEvts=days.flatMap(d=>d.events);
+  const byType={};allEvts.forEach(e=>byType[e.event_type]=(byType[e.event_type]||0)+1);
+  const demo={
+    meta:{title:'安师大 · 我的校园日程',view_mode:'week',range:fmt(mon)+' 至 '+fmt(new Date(mon.getTime()+6*864e5)),target_date:fmt(mon),generated_at:fmt(now)+' '+now.toTimeString().slice(0,5),total_events:allEvts.length,urgent_count:allEvts.filter(e=>e.priority>=8).length},
+    event_type_config:Object.fromEntries(Object.entries(TYPE_COLORS).map(([k,v])=>[k,{color:v.c,icon:({'课程':'📚','考试':'📝','作业':'✏️','社团':'🎭','活动':'🎉','讲座':'🎤','体育':'⚽','其他':'📌'})[k]||'📌',c:v.c,bg:v.bg,dark:v.dark}])),
+    time_slots:[['08:00','08:45'],['09:00','09:45'],['10:00','10:45'],['11:00','11:45'],['14:00','14:45'],['15:00','15:45'],['16:00','16:45'],['19:00','20:30'],['20:30','22:00']],
+    days,
+    statistics:{by_type:byType,urgent_events:allEvts.filter(e=>e.priority>=8).map(e=>({title:e.title,date:e.date,type:e.event_type}))}
+  };
+  document.getElementById('json-input').value=JSON.stringify(demo);
+  loadCalendar();
+}
+
+(function checkURLData(){
+  const params=new URLSearchParams(window.location.search);
+  const data=params.get('data');
+  if(data){
+    try{
+      document.getElementById('json-input').value=decodeURIComponent(data);
+      loadCalendar();
+    }catch(e){console.error('URL data parse error:',e)}
+  }
+  const b64=params.get('b64');
+  if(b64){
+    try{
+      document.getElementById('json-input').value=atob(b64);
+      loadCalendar();
+    }catch(e){console.error('URL b64 parse error:',e)}
+  }
+})();
+</script>
+</body>
+</html>
